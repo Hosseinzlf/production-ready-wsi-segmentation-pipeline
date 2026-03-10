@@ -89,15 +89,18 @@ class SegmentationModel:
             List of binary masks, each (H, W), dtype uint8, values {0, 1}.
         """
         tensor = self.preprocess(patches)
-        logits = self.model(tensor)  # expected: (N, 1, H, W) or (N, H, W)
+        logits = self.model(tensor)  # expected: (N, 1, H, W), (N, C, H, W), or (N, H, W)
 
         # Normalise output shape to (N, H, W)
         if logits.dim() == 4:
-            logits = logits.squeeze(1)
+            if logits.shape[1] == 1:
+                logits = logits.squeeze(1)       # (N, 1, H, W) → (N, H, W)
+            else:
+                logits = logits[:, 1]            # (N, C, H, W) → foreground class → (N, H, W)
         elif logits.dim() != 3:
             raise ValueError(
                 f"Unexpected model output shape: {logits.shape}. "
-                "Expected (N, H, W) or (N, 1, H, W)."
+                "Expected (N, H, W), (N, 1, H, W), or (N, C, H, W)."
             )
 
         probs = torch.sigmoid(logits)
