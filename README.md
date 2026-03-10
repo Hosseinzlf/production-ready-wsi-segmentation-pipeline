@@ -1,6 +1,21 @@
 # WSI Lesion Segmentation Pipeline
 
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 A **memory-efficient**, production-ready pipeline for generating binary lesion masks from Whole Slide Images (WSI) using a pre-trained TorchScript segmentation model.
+
+---
+
+## Prerequisites
+
+- **Python 3.10+**
+- **OpenSlide** system library:
+  ```bash
+  brew install openslide          # macOS
+  apt-get install libopenslide0   # Linux (Debian/Ubuntu)
+  ```
 
 ---
 
@@ -10,15 +25,16 @@ A **memory-efficient**, production-ready pipeline for generating binary lesion m
 # 1. Clone and install
 git clone <your-repo-url>
 cd wsi-segmentation-pipeline
-uv sync                    # or: pip install -e .
+pip install -r requirements.txt   # or: uv sync / pip install -e .
 
 # 2. Place your model
 cp /path/to/model.pt models/model.pt
 
-# 3. Run
-python main.py slide.svs outputs/mask.tiff
+# 3. Run (always pass --config to use your settings)
 python main.py slide.svs outputs/mask.tiff --config config/config.yaml
 ```
+
+> **Important:** Running without `--config` uses built-in defaults (CPU, batch size 8). Always pass `--config config/config.yaml` to use your configured device and batch size.
 
 ---
 
@@ -104,8 +120,8 @@ model:
   patch_size: 512
   target_mpp: 0.88          # 10x magnification
   threshold: 0.5
-  batch_size: 8
-  device: "auto"            # auto-selects GPU if available
+  batch_size: 16            # increase for faster GPU inference
+  device: "auto"            # auto | cpu | cuda | cuda:0 | mps (Apple Silicon)
 
 inference:
   overlap: 64               # pixels of overlap between patches
