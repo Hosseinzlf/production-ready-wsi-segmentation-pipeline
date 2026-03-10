@@ -1,0 +1,40 @@
+[project]
+name = "wsi-segmentation-pipeline"
+version = "0.1.0"
+description = "Memory-efficient lesion segmentation pipeline for Whole Slide Images"
+readme = "README.md"
+requires-python = ">=3.10"
+
+dependencies = [
+    "torch>=2.0.0",
+    "openslide-python>=1.3.0",
+    "tifffile>=2023.1.1",
+    "numpy>=1.24.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "loguru>=0.7.0",
+    "typer>=0.9.0",
+    "tqdm>=4.65.0",
+    "opencv-python-headless>=4.7.0",
+    "Pillow>=9.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.scripts]
+wsi-segment = "main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wsi_pipeline"]

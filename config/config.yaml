@@ -1,0 +1,25 @@
+# WSI Segmentation Pipeline Configuration
+
+
+model:
+  path: "models/model_scripted.pt"        # Path to the TorchScript (.pt) model
+  patch_size: 512                 # Model input size in pixels
+  target_mpp: 0.88               # Target microns-per-pixel (10x magnification)
+  threshold: 0.5                  # Sigmoid threshold for binary classification
+  batch_size: 8                   # Patches per GPU/CPU batch
+  device: "auto"                  # "auto" | "cpu" | "cuda" | "cuda:0"
+
+inference:
+  overlap: 64                     # Overlap in pixels between adjacent patches (avoids border artifacts)
+  use_tissue_mask: true           # Skip background patches — strongly recommended for speed
+  tissue_thumbnail_size: 1024     # Thumbnail resolution for tissue detection
+  tissue_threshold: 0.05          # Min tissue fraction to process a patch (0.0 = process all)
+
+output:
+  compression: "lzw"              # TIFF compression: "lzw" | "deflate" | "none"
+  tile_size: 512                  # Output TIFF tile size in pixels
+  bigtiff: true                   # Required for masks > 4 GB — leave as true
+
+logging:
+  level: "INFO"                   # "DEBUG" | "INFO" | "WARNING" | "ERROR"
+  file: null                      # Set to a path (e.g. "logs/pipeline.log") to enable file logging

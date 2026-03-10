@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+.uv/
+*.tmp.mmap
+
+# Model weights
+*.pt
+
+# WSI data files (large — never commit)
+data/
+*.svs
+*.tiff
+*.tif
+*.ndpi
+*.mrxs
+*.scn
+*.bif
+*.vms
+*.vmu
+*.dcm
+
+# Pipeline outputs
+outputs/
+logs/
+
+# Environment
+.env
+.DS_Store
