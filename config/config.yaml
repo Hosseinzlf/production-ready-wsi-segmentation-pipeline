@@ -2,7 +2,7 @@
 
 
 model:
-  path: "models/model_scripted.pt"        # Path to the TorchScript (.pt) model
+  path: "models/model.pt"                 # Path to the TorchScript (.pt) model
   patch_size: 512                 # Model input size in pixels
   target_mpp: 0.88               # Target microns-per-pixel (10x magnification)
   threshold: 0.5                  # Sigmoid threshold for binary classification
