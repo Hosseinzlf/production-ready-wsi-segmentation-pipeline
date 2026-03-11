@@ -1,6 +1,5 @@
 """
 Configuration management using Pydantic for validation.
-All pipeline parameters live here — no hardcoded values elsewhere.
 """
 
 from __future__ import annotations
@@ -18,7 +17,7 @@ class ModelConfig(BaseModel):
     target_mpp: float = 0.88
     threshold: float = 0.5
     batch_size: int = 16
-    device: str = "mps"  # "auto", "cpu", "cuda", "cuda:0", "mps"
+    device: str = "auto"  # "auto", "cpu", "cuda", "cuda:0", "mps"
 
 
 class InferenceConfig(BaseModel):
