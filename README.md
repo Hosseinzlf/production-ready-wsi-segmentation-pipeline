@@ -23,7 +23,15 @@ brew install openslide
 # Debian/Ubuntu
 sudo apt-get update
 sudo apt-get install -y libopenslide0
+
+# Fedora/RHEL/CentOS
+sudo dnf install -y openslide
+
+# Arch Linux
+sudo pacman -S openslide
 ```
+
+Windows users can install `openslide-bin` from pip (or use WSL/Docker).
 
 Use Python 3.10+.
 
