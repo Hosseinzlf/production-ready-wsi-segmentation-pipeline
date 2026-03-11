@@ -1,54 +1,42 @@
 # WSI Lesion Segmentation Pipeline
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey)
-![License](https://img.shields.io/badge/license-MIT-green)
+Memory-efficient lesion segmentation for Whole Slide Images (WSIs) using a TorchScript model.
 
-A **memory-efficient**, production-ready pipeline for generating binary lesion masks from Whole Slide Images (WSI) using a pre-trained TorchScript segmentation model.
+The pipeline reads a slide at the closest resolution level to your target MPP, runs patch-wise inference in batches, and writes a binary TIFF mask aligned to that level.
 
----
+## What This Repository Provides
 
-## Prerequisites
-
-- **Python 3.10+**
-- **OpenSlide** system library:
-  ```bash
-  brew install openslide          # macOS
-  apt-get install libopenslide0   # Linux (Debian/Ubuntu)
-  ```
-
----
-
-## Quick Start
-
-```bash
-# 1. Clone and install
-git clone <your-repo-url>
-cd wsi-segmentation-pipeline
-pip install -r requirements.txt   # or: uv sync / pip install -e .
-
-# 2. Place your model
-cp /path/to/model.pt models/model.pt
-
-# 3. Run (always pass --config to use your settings)
-python main.py slide.svs outputs/mask.tiff --config config/config.yaml
-```
-
-> **Important:** Running without `--config` uses built-in defaults (CPU, batch size 8). Always pass `--config config/config.yaml` to use your configured device and batch size.
-
----
+- A CLI for local segmentation runs (`wsi-segment` or `python main.py`)
+- Config-driven behavior via `config/config.yaml`
+- Optional Prefect flow serving (`wsi-prefect`)
+- A visualization helper (`scripts/visualize_mask.py`) to inspect mask overlays
 
 ## Setup
 
-### Option A — uv (recommended)
+### 1) System prerequisites
+
+Install OpenSlide (required by `openslide-python`):
 
 ```bash
-pip install uv
-uv sync
-uv run python main.py --help
+# macOS
+brew install openslide
+
+# Debian/Ubuntu
+sudo apt-get update
+sudo apt-get install -y libopenslide0
 ```
 
-### Option B — pip + venv
+Use Python 3.10+.
+
+### 2) Install project dependencies
+
+Option A (recommended): `uv`
+
+```bash
+uv sync
+```
+
+Option B: `pip` + virtual environment
 
 ```bash
 python -m venv .venv
@@ -56,126 +44,150 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-### Option C — Docker
+### 3) Add your model file
+
+Place your TorchScript model at the configured location:
+
+```bash
+mkdir -p models
+cp /path/to/model.pt models/model.pt
+```
+
+Default model path is configured in `config/config.yaml`.
+
+### 4) Optional: Docker runtime
 
 ```bash
 docker build -t wsi-pipeline .
-
 docker run --rm \
   -v /path/to/wsis:/data/wsi \
   -v /path/to/outputs:/data/outputs \
   -v /path/to/models:/app/models \
   wsi-pipeline \
-  /data/wsi/slide.svs /data/outputs/mask.tiff
+  /data/wsi/slide.svs /data/outputs/mask.tiff --config config/config.yaml
 ```
-
-> **Note (Linux):** OpenSlide requires `libopenslide0`. Install via:  
-> `apt-get install libopenslide0` or `brew install openslide` (macOS).
-
----
 
 ## Usage
 
-```
-Usage: main.py [OPTIONS] WSI_PATH OUTPUT_PATH
-
-Arguments:
-  WSI_PATH      Path to input WSI file (.svs or .tiff)
-  OUTPUT_PATH   Path for output binary mask (.tiff)
-
-Options:
-  -c, --config PATH         Path to YAML config file
-  -m, --model PATH          Override model path
-  -b, --batch-size INT      Override GPU batch size
-  -d, --device TEXT         Override device (auto/cpu/cuda/cuda:0)
-  --no-tissue-mask          Disable tissue detection
-  --log-level TEXT          Logging level [default: INFO]
-```
-
-### Examples
+### Basic run
 
 ```bash
-# Default config
-python main.py data/slide.svs outputs/mask.tiff
-
-# Custom config
-python main.py data/slide.svs outputs/mask.tiff --config config/config.yaml
-
-# GPU with large batch
-python main.py data/slide.svs outputs/mask.tiff --device cuda --batch-size 32
-
-# Disable tissue masking (process every patch including background)
-python main.py data/slide.svs outputs/mask.tiff --no-tissue-mask
+wsi-segment data/slide.svs outputs/mask.tiff --config config/config.yaml
 ```
 
----
+Equivalent direct entrypoint:
+
+```bash
+python main.py data/slide.svs outputs/mask.tiff --config config/config.yaml
+```
+
+### Useful CLI options
+
+- `--config`, `-c`: load YAML configuration
+- `--model`, `-m`: override model path
+- `--batch-size`, `-b`: override inference batch size
+- `--device`, `-d`: override compute device (`cpu`, `cuda`, `cuda:0`, `mps`, `auto`)
+- `--no-tissue-mask`: process all patches (including likely background)
+- `--log-level`: set runtime logging level
+
+### Example commands
+
+```bash
+# Force CUDA and larger batch size
+wsi-segment data/slide.svs outputs/mask.tiff \
+  --config config/config.yaml \
+  --device cuda \
+  --batch-size 32
+
+# Disable tissue masking
+wsi-segment data/slide.svs outputs/mask.tiff \
+  --config config/config.yaml \
+  --no-tissue-mask
+```
+
+### Output
+
+The output mask is a single-channel TIFF:
+
+- Values: `0` (background), `1` (lesion)
+- Tiled and compressed (`lzw` by default)
+- MPP encoded in TIFF resolution metadata
+- Pixel-aligned with the selected WSI pyramid level
+
+### Quick visualization
+
+```bash
+python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff
+```
 
 ## Configuration
 
-All parameters live in `config/config.yaml`. No code changes needed to tune the pipeline.
+All tunable parameters are in `config/config.yaml`:
 
-```yaml
-model:
-  path: "models/model.pt"
-  patch_size: 512
-  target_mpp: 0.88          # 10x magnification
-  threshold: 0.5
-  batch_size: 16            # increase for faster GPU inference
-  device: "auto"            # auto | cpu | cuda | cuda:0 | mps (Apple Silicon)
+- `model`: model path, patch size, target MPP, threshold, batch size, device
+- `inference`: overlap, tissue-mask usage/threshold
+- `output`: compression, tile size, BigTIFF toggle
+- `logging`: log level and optional log file path
 
-inference:
-  overlap: 64               # pixels of overlap between patches
-  use_tissue_mask: true     # skip white/background patches
-  tissue_thumbnail_size: 1024
-  tissue_threshold: 0.05
+Run-time CLI arguments can override these values for one execution.
 
-output:
-  compression: "lzw"
-  tile_size: 512
-  bigtiff: true             # required for masks > 4 GB
+## Architectural Decisions (Brief)
+
+The architecture intentionally separates concerns into small modules:
+
+- `wsi_pipeline/reader.py`: WSI access, pyramid level selection, patch iteration, tissue mask generation
+- `wsi_pipeline/model.py`: model loading, preprocessing, batched inference, thresholding
+- `wsi_pipeline/writer.py`: disk-backed mask accumulation and final TIFF writing
+- `wsi_pipeline/pipeline.py`: orchestration, batching loop, and progress reporting
+
+Key decisions and rationale:
+
+1. **Disk-backed mask (`numpy.memmap`)**
+   - Keeps memory use stable for large slides.
+   - Trade-off: requires temporary disk space proportional to output mask size.
+
+2. **Closest-pyramid-level inference**
+   - Chooses the native slide level nearest `target_mpp` instead of resampling every patch.
+   - Trade-off: actual MPP may be approximate if no level matches exactly.
+
+3. **Thumbnail-based tissue masking**
+   - Uses Otsu thresholding to skip mostly background patches and reduce compute time.
+   - Trade-off: can be less reliable on unusual staining/artifacts, so it is configurable and can be disabled.
+
+4. **Patch overlap with center write-back**
+   - Mitigates seam artifacts at patch boundaries.
+   - Trade-off: processes extra pixels compared with zero-overlap tiling.
+
+5. **Tiled BigTIFF output with resolution metadata**
+   - Supports large masks and downstream WSI tooling.
+   - Trade-off: TIFF writing/compression adds output-stage time.
+
+## Optional Prefect Integration
+
+Prefect support is lightweight and wraps the same core pipeline logic:
+
+```bash
+# Terminal 1: start Prefect server and UI
+prefect server start
+
+# Terminal 2: serve flow deployment
+wsi-prefect serve --deployment-name wsi-segmentation --concurrency-limit 1
 ```
 
----
+Trigger a run:
 
-## Architecture
-
-### Module Overview
-
-```
-wsi_pipeline/
-├── config.py     — Pydantic config models, YAML loading
-├── reader.py     — WSI I/O, MPP detection, tissue masking, patch iteration
-├── model.py      — TorchScript model loading, preprocessing, batched inference
-├── writer.py     — Memory-mapped mask accumulation, tiled TIFF output
-└── pipeline.py   — Orchestration: batching, progress, error handling
+```bash
+prefect deployment run "wsi-segmentation-flow/wsi-segmentation" \
+  --param wsi_path="data/slide.svs" \
+  --param output_path="outputs/mask.tiff" \
+  --param config="config/config.yaml"
 ```
 
-### Key Design Decisions
+Local smoke-test without serving:
 
-#### 1. Memory management via `numpy.memmap`
-The output mask is never held in RAM. It lives on disk as a memory-mapped file, and patches are written directly to their position. RAM usage is constant at approximately `batch_size × 512 × 512 × 3 bytes` regardless of WSI size.
-
-**Trade-off:** Requires temporary disk space equal to the mask size. For a 20000×15000 mask that's ~300 MB — acceptable for clinical workstations.
-
-#### 2. Pyramid level selection over rescaling
-Instead of reading at an arbitrary zoom and rescaling, we find the pyramid level whose native MPP is closest to the model's expected MPP (0.88). This avoids lossy interpolation and is faster.
-
-**Trade-off:** The actual MPP may differ slightly from 0.88 if no level matches exactly. For the current model specification this is negligible, but a future improvement would be to rescale the closest level.
-
-#### 3. Tissue masking (Otsu on thumbnail)
-We detect tissue regions on a low-resolution thumbnail before processing. Background patches (white glass) are skipped entirely, saving 60–80% of inference time on typical slides.
-
-**Trade-off:** Adds ~1 second of overhead per slide. The Otsu threshold can fail on heavily stained or artefact-heavy slides — configurable via `tissue_threshold`.
-
-#### 4. Patch overlap for border artifact suppression
-Adjacent patches overlap by `overlap` pixels. Only the centre of each prediction is written to the output. This prevents the "grid" artefact that appears when a model sees artificial borders.
-
-**Trade-off:** Increases total patches processed by ~15-20%. Configurable.
-
-#### 5. Tiled GeoTIFF output
-The output is a tiled, compressed, georeferenced TIFF with MPP stored in the resolution tag. This makes it directly compatible with WSI viewers (QuPath, ASAP) and downstream processing tools.
-
----
+```bash
+wsi-prefect run-local data/slide.svs outputs/mask.tiff --config config/config.yaml
+```
 
 ## Testing
 
@@ -183,33 +195,3 @@ The output is a tiled, compressed, georeferenced TIFF with MPP stored in the res
 pytest tests/ -v
 pytest tests/ -v --cov=wsi_pipeline --cov-report=term-missing
 ```
-
-Tests are unit-level: all OpenSlide and model I/O is mocked, so no WSI files or GPU are required to run them.
-
----
-
-## Scaling Vision
-
-### Scaling to Many Slides (Batch Processing)
-
-The current pipeline processes one slide at a time. For production, a simple extension would be to wrap `pipeline.run()` in a queue consumer (e.g., Celery, AWS SQS) that pulls WSI paths from a job queue. Each worker is stateless and processes one slide, making horizontal scaling trivial.
-
-### GPU Utilisation
-
-The current bottleneck on GPU machines is I/O: reading patches from disk is slower than inference. Solutions:
-- Prefetch patches in a background thread using `torch.utils.data.DataLoader` with `num_workers > 0`
-- Cache the current pyramid level tile in a memory-mapped read buffer
-
-### Very Large Slides (>200,000 × 200,000 px)
-
-For slides exceeding a few GB at inference resolution, the memmap approach still holds: the temporary mask file scales linearly with slide area. The `bigtiff=True` flag ensures the output TIFF can exceed 4 GB. For even larger outputs, a Zarr store (via `zarr` + `ome-zarr`) would be preferable as it supports chunked, cloud-native I/O.
-
----
-
-## Output Format
-
-The output is a single-channel, binary TIFF:
-- **Values:** 0 = background, 1 = lesion
-- **Format:** Tiled BigTIFF, LZW compressed
-- **Resolution:** MPP stored in TIFF resolution tag (compatible with QuPath / ASAP)
-- **Spatial alignment:** 1:1 pixel correspondence with the WSI at the inference level
