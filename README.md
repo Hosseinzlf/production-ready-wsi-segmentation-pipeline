@@ -124,7 +124,7 @@ The output mask is a single-channel TIFF:
 ### Quick visualization
 
 ```bash
-python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff
+python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save outputs/mask_preview.png
 ```
 
 ### Example result
