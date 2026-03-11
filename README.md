@@ -173,14 +173,15 @@ pytest tests/ -v --cov=wsi_pipeline --cov-report=term-missing
 
 ## Architectural Decisions (Brief)
 
-The architecture intentionally separates concerns into small modules:
+This pipeline is designed for reliable segmentation on large WSIs while keeping memory usage predictable and runtime practical.
+The architecture separates concerns into focused modules:
 
 - `wsi_pipeline/reader.py`: WSI access, pyramid level selection, patch iteration, tissue mask generation
 - `wsi_pipeline/model.py`: model loading, preprocessing, batched inference, thresholding
 - `wsi_pipeline/writer.py`: disk-backed mask accumulation and final TIFF writing
 - `wsi_pipeline/pipeline.py`: orchestration, batching loop, and progress reporting
 
-Key decisions and rationale:
+Key design decisions and trade-offs:
 
 1. **Disk-backed mask (`numpy.memmap`)**
    - Keeps memory use stable for large slides.
