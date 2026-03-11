@@ -17,8 +17,8 @@ class ModelConfig(BaseModel):
     patch_size: int = 512
     target_mpp: float = 0.88
     threshold: float = 0.5
-    batch_size: int = 8
-    device: str = "auto"  # "auto", "cpu", "cuda", "cuda:0", etc.
+    batch_size: int = 16
+    device: str = "mps"  # "auto", "cpu", "cuda", "cuda:0", "mps"
 
 
 class InferenceConfig(BaseModel):
@@ -35,8 +35,8 @@ class OutputConfig(BaseModel):
 
 
 class LoggingConfig(BaseModel):
-    level: str = "INFO"
-    file: Optional[Path] = None
+    level: str = "INFO" # "DEBUG", "INFO", "WARNING", "ERROR"
+    file: Optional[Path] = None # Set to a path (e.g. "logs/pipeline.log") to enable file logging
 
 
 class PipelineConfig(BaseModel):

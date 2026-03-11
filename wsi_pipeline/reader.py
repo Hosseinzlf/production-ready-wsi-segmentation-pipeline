@@ -6,7 +6,7 @@ Design decisions:
 - Finds the pyramid level closest to the target MPP instead of rescaling, which
   avoids unnecessary interpolation and keeps memory predictable.
 - Tissue masking via Otsu on a low-res thumbnail: skips ~60-80% of patches
-  in typical slides (background is white), dramatically reducing inference time.
+  in typical slides (background is white), reducing inference time.
 - Patches are yielded one at a time — the caller controls batching, so this
   module has no opinion on GPU batch size.
 """

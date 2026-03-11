@@ -7,7 +7,7 @@ model:
   target_mpp: 0.88               # Target microns-per-pixel (10x magnification)
   threshold: 0.5                  # Sigmoid threshold for binary classification
   batch_size: 16                   # Patches per GPU/CPU batch
-  device: "mps"                  # "auto" | "cpu" | "cuda" | "cuda:0" | "mps"
+  device: "mps"                  # "auto" | "cpu" | "cuda" | "cuda:0" | "mps" 
 
 inference:
   overlap: 64                     # Overlap in pixels between adjacent patches (avoids border artifacts)
@@ -22,4 +22,4 @@ output:
 
 logging:
   level: "INFO"                   # "DEBUG" | "INFO" | "WARNING" | "ERROR"
-  file: null                      # Set to a path (e.g. "logs/pipeline.log") to enable file logging
+  file: "logs/pipeline.log"                      # Set to a path (e.g. "logs/pipeline.log") to enable file logging
