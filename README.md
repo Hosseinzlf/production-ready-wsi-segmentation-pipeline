@@ -1,8 +1,7 @@
 # WSI Lesion Segmentation Pipeline
 
-Memory-efficient lesion segmentation for Whole Slide Images (WSIs) using a TorchScript model.
-
-The pipeline reads a slide at the closest resolution level to your target MPP, runs patch-wise inference in batches, and writes a binary TIFF mask aligned to that level.
+A production-focused lesion segmentation pipeline for whole-slide images.
+It uses patch-based inference with optional tissue filtering and exports tiled TIFF masks.
 
 ## What This Repository Provides
 
