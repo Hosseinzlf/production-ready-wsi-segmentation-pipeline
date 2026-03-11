@@ -80,19 +80,29 @@ docker run --rm \
 
 ## Usage
 
-### Basic run
+You can run the pipeline in two ways:
+
+### Option 1: Run directly (without Prefect)
+
+Single command run:
 
 ```bash
 wsi-segment data/slide.svs outputs/mask.tiff --config config/config.yaml
 ```
 
-Equivalent direct entrypoint:
+Equivalent entrypoint:
 
 ```bash
 python main.py data/slide.svs outputs/mask.tiff --config config/config.yaml
 ```
 
-### Useful CLI options
+Generate a preview image:
+
+```bash
+python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save mask_preview.png
+```
+
+Useful CLI options:
 
 - `--config`, `-c`: load YAML configuration
 - `--model`, `-m`: override model path
@@ -101,19 +111,33 @@ python main.py data/slide.svs outputs/mask.tiff --config config/config.yaml
 - `--no-tissue-mask`: process all patches (including likely background)
 - `--log-level`: set runtime logging level
 
-### Example commands
+### Option 2: Run with Prefect (client/server)
+
+1) Start Prefect server and UI (Terminal 1):
 
 ```bash
-# Force CUDA and larger batch size
-wsi-segment data/slide.svs outputs/mask.tiff \
-  --config config/config.yaml \
-  --device cuda \
-  --batch-size 32
+prefect server start
+```
 
-# Disable tissue masking
-wsi-segment data/slide.svs outputs/mask.tiff \
-  --config config/config.yaml \
-  --no-tissue-mask
+2) Serve the deployment (Terminal 2):
+
+```bash
+wsi-prefect serve --deployment-name wsi-segmentation --concurrency-limit 1
+```
+
+3) Trigger a run from the client:
+
+```bash
+prefect deployment run "wsi-segmentation-flow/wsi-segmentation" \
+  --param wsi_path="data/slide.svs" \
+  --param output_path="outputs/mask.tiff" \
+  --param config="config/config.yaml"
+```
+
+Optional local Prefect smoke test (no server needed):
+
+```bash
+wsi-prefect run-local data/slide.svs outputs/mask.tiff --config config/config.yaml
 ```
 
 ### Output
@@ -128,7 +152,7 @@ The output mask is a single-channel TIFF:
 ### Quick visualization
 
 ```bash
-python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save outputs/mask_preview.png
+python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save mask_preview.png
 ```
 
 ### Example result
@@ -178,33 +202,6 @@ Key decisions and rationale:
 5. **Tiled BigTIFF output with resolution metadata**
    - Supports large masks and downstream WSI tooling.
    - Trade-off: TIFF writing/compression adds output-stage time.
-
-## Optional Prefect Integration
-
-Prefect support is lightweight and wraps the same core pipeline logic:
-
-```bash
-# Terminal 1: start Prefect server and UI
-prefect server start
-
-# Terminal 2: serve flow deployment
-wsi-prefect serve --deployment-name wsi-segmentation --concurrency-limit 1
-```
-
-Trigger a run:
-
-```bash
-prefect deployment run "wsi-segmentation-flow/wsi-segmentation" \
-  --param wsi_path="data/slide.svs" \
-  --param output_path="outputs/mask.tiff" \
-  --param config="config/config.yaml"
-```
-
-Local smoke-test without serving:
-
-```bash
-wsi-prefect run-local data/slide.svs outputs/mask.tiff --config config/config.yaml
-```
 
 ## Testing
 
