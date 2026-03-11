@@ -13,7 +13,7 @@ RUN uv venv /opt/venv && \
     torch --index-url https://download.pytorch.org/whl/cpu && \
     uv pip install --python /opt/venv/bin/python \
     openslide-python tifffile numpy pydantic pyyaml loguru typer tqdm \
-    opencv-python-headless Pillow
+    opencv-python-headless Pillow imagecodecs
 
 # --- Runtime stage ---
 FROM python:3.11-slim
@@ -21,15 +21,21 @@ FROM python:3.11-slim
 # OpenSlide system library (required by openslide-python)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libopenslide0 \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 WORKDIR /app
 COPY . .
+
+# Run as non-root for production safety.
+RUN useradd --create-home --uid 10001 appuser && chown -R appuser:appuser /app
+USER appuser
 
 # Volumes for data I/O — mount your WSI files and model here
 VOLUME ["/data/wsi", "/data/outputs", "/app/models"]

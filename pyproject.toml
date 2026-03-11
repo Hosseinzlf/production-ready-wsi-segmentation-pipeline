@@ -17,6 +17,7 @@ dependencies = [
     "tqdm>=4.65.0",
     "opencv-python-headless>=4.7.0",
     "Pillow>=9.0.0",
+    "prefect",
 ]
 
 [project.optional-dependencies]
@@ -27,6 +28,7 @@ dev = [
 
 [project.scripts]
 wsi-segment = "main:app"
+wsi-prefect = "wsi_pipeline.prefect_app:app"
 
 [build-system]
 requires = ["hatchling"]
