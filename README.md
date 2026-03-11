@@ -23,7 +23,15 @@ brew install openslide
 # Debian/Ubuntu
 sudo apt-get update
 sudo apt-get install -y libopenslide0
+
+# Fedora/RHEL/CentOS (dnf)
+sudo dnf install -y openslide openslide-tools
+
+# Arch Linux
+sudo pacman -S openslide
 ```
+
+Windows: prefer running this pipeline through Docker or WSL2 (Ubuntu), then use the Debian/Ubuntu install commands above inside WSL2.
 
 Use Python 3.10+.
 
