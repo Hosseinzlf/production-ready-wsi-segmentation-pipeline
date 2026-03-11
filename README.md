@@ -127,6 +127,12 @@ The output mask is a single-channel TIFF:
 python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff
 ```
 
+### Example result
+
+Example mask overlay output (`mask_preview.png`):
+
+![Example mask preview](mask_preview.png)
+
 ## Configuration
 
 All tunable parameters are in `config/config.yaml`:
