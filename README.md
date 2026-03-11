@@ -82,6 +82,7 @@ docker run --rm \
 
 - WSI input: expects a whole-slide image file (for example `.svs`; other OpenSlide-supported formats may work).
 - Model input: expects a TorchScript model file (`.pt`) at `models/model.pt` (or a path set in `config/config.yaml`).
+- The example path `data/slide.svs` is only a convention for this README; your WSI can be stored anywhere as long as you pass its actual path to the CLI/Prefect run.
 
 ## Usage
 
