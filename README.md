@@ -133,11 +133,6 @@ prefect deployment run "wsi-segmentation-flow/wsi-segmentation" \
   --param config="config/config.yaml"
 ```
 
-Optional local Prefect smoke test (no server needed):
-
-```bash
-wsi-prefect run-local data/slide.svs outputs/mask.tiff --config config/config.yaml
-```
 
 ## Output and visualization
 
