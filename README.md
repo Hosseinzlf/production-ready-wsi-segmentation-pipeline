@@ -37,19 +37,23 @@ Use Python 3.10+.
 
 ### 2) Install project dependencies
 
-Option A (recommended): `uv`
 
-```bash
-uv sync
-```
-
-Option B: `pip` + virtual environment
+Option A: `pip` + virtual environment
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .
 ```
+
+
+Option B: `uv`
+
+```bash
+uv sync
+```
+
+
 
 ### 3) Add your model file
 
