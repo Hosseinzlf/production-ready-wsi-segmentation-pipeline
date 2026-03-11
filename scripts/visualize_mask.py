@@ -76,8 +76,6 @@ def main():
     overlay = img.copy()
     overlay[mask_resized > 0] = (0.6 * overlay[mask_resized > 0] + 0.4 * np.array([255, 0, 0])).astype(np.uint8)
 
-    positive_ratio = float(mask.mean())
-
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 
     axes[0].imshow(img)
@@ -85,7 +83,7 @@ def main():
     axes[0].axis("off")
 
     axes[1].imshow(mask, cmap="gray", vmin=0, vmax=1)
-    axes[1].set_title(f"Mask preview (positive={positive_ratio:.2%})")
+    axes[1].set_title("Mask preview")
     axes[1].axis("off")
 
     axes[2].imshow(overlay)

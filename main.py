@@ -2,9 +2,9 @@
 CLI entry point for the WSI segmentation pipeline.
 
 Usage:
-    python main.py slide.svs outputs/mask.tiff
-    python main.py slide.svs outputs/mask.tiff --config config/config.yaml
-    python main.py slide.svs outputs/mask.tiff --model models/custom.pt --batch-size 16
+    python main.py data/slide.svs outputs/mask.tiff
+    python main.py data/slide.svs outputs/mask.tiff --config config/config.yaml
+    python main.py data/slide.svs outputs/mask.tiff --model models/custom.pt --batch-size 16
 """
 
 from __future__ import annotations
