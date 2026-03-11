@@ -1,6 +1,6 @@
 # WSI Lesion Segmentation Pipeline
 
-A production-focused lesion segmentation pipeline for whole-slide images.
+A production-ready lesion segmentation pipeline for whole-slide images.
 It uses patch-based inference with optional tissue filtering and exports tiled TIFF masks.
 
 ## What This Repository Provides
