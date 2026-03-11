@@ -133,6 +133,17 @@ prefect deployment run "wsi-segmentation-flow/wsi-segmentation" \
   --param config="config/config.yaml"
 ```
 
+## Preflight checks
+
+Before inference starts, the pipeline runs fail-fast checks to avoid expensive partial runs:
+
+- Verifies the model file exists and is readable
+- Verifies the WSI input exists, is readable, and can be opened by OpenSlide
+- Verifies the output directory can be created/written
+- Estimates required disk space (temp memmap + output + safety buffer) and fails early if free space is too low
+
+If one of these checks fails, the run exits immediately with a clear error message.
+
 
 ## Output and visualization
 
