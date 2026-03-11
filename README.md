@@ -149,6 +149,11 @@ The output mask is a single-channel TIFF:
 - MPP encoded in TIFF resolution metadata
 - Pixel-aligned with the selected WSI pyramid level
 
+### Input assumptions
+
+- WSI input: expects a whole-slide image file (for example `.svs`; other OpenSlide-supported formats may work).
+- Model input: expects a TorchScript model file (`.pt`) at `models/model.pt` (or a path set in `config/config.yaml`).
+
 ### Quick visualization
 
 ```bash
