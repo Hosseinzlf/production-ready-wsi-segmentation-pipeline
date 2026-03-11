@@ -78,6 +78,11 @@ docker run --rm \
   /data/wsi/slide.svs /data/outputs/mask.tiff --config config/config.yaml
 ```
 
+## Input assumptions
+
+- WSI input: expects a whole-slide image file (for example `.svs`; other OpenSlide-supported formats may work).
+- Model input: expects a TorchScript model file (`.pt`) at `models/model.pt` (or a path set in `config/config.yaml`).
+
 ## Usage
 
 You can run the pipeline in two ways:
@@ -94,12 +99,6 @@ Equivalent entrypoint:
 
 ```bash
 python main.py data/slide.svs outputs/mask.tiff --config config/config.yaml
-```
-
-Generate a preview image:
-
-```bash
-python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save mask_preview.png
 ```
 
 Useful CLI options:
@@ -140,7 +139,7 @@ Optional local Prefect smoke test (no server needed):
 wsi-prefect run-local data/slide.svs outputs/mask.tiff --config config/config.yaml
 ```
 
-### Output
+## Output and visualization
 
 The output mask is a single-channel TIFF:
 
@@ -149,18 +148,11 @@ The output mask is a single-channel TIFF:
 - MPP encoded in TIFF resolution metadata
 - Pixel-aligned with the selected WSI pyramid level
 
-### Input assumptions
-
-- WSI input: expects a whole-slide image file (for example `.svs`; other OpenSlide-supported formats may work).
-- Model input: expects a TorchScript model file (`.pt`) at `models/model.pt` (or a path set in `config/config.yaml`).
-
-### Quick visualization
+Generate preview image:
 
 ```bash
 python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save mask_preview.png
 ```
-
-### Example result
 
 Example mask overlay output (`mask_preview.png`):
 
@@ -176,6 +168,13 @@ All tunable parameters are in `config/config.yaml`:
 - `logging`: log level and optional log file path
 
 Run-time CLI arguments can override these values for one execution.
+
+## Testing
+
+```bash
+pytest tests/ -v
+pytest tests/ -v --cov=wsi_pipeline --cov-report=term-missing
+```
 
 ## Architectural Decisions (Brief)
 
@@ -208,9 +207,3 @@ Key decisions and rationale:
    - Supports large masks and downstream WSI tooling.
    - Trade-off: TIFF writing/compression adds output-stage time.
 
-## Testing
-
-```bash
-pytest tests/ -v
-pytest tests/ -v --cov=wsi_pipeline --cov-report=term-missing
-```
