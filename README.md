@@ -208,7 +208,7 @@ Key design decisions and trade-offs:
 
 
 4. **Patch overlap**
-   - Mitigates seam artifacts at patch boundaries.
+   - Reduces artifacts at patch boundaries.
 
 5. **Tiled BigTIFF output with resolution metadata**
    - Supports large masks and downstream WSI tooling.
