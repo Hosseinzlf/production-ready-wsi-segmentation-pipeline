@@ -206,19 +206,16 @@ Preflight checks and tests (including `tests/test_pipeline_preflight.py`) are in
    - Uses a disk-backed array to keep memory usage stable on large slides.
    - **Trade-off:** slower than in-memory accumulation, but much safer and more scalable for production-sized WSIs.
 
-2. **Closest pyramid level for inference**
-   - Selects the native slide level nearest `target_mpp` instead of resampling every patch.
-   - **Trade-off:** improves throughput and reduces interpolation overhead, with minor precision compromise when an exact target resolution is unavailable.
 
-3. **Thumbnail-based tissue masking**
+2. **Thumbnail-based tissue masking**
    - Uses thumbnail + Otsu thresholding to skip mostly background patches.
    - **Trade-off:** large compute savings, but thresholds must be tuned to avoid missing small tissue regions.
 
-4. **Patch overlap during tiling**
+3. **Patch overlap during tiling**
    - Applies overlap between adjacent patches to reduce edge artifacts.
    - **Trade-off:** better boundary quality at the cost of extra inference work.
 
-5. **Tiled BigTIFF output with resolution metadata**
+4. **Tiled BigTIFF output with resolution metadata**
    - Writes tiled, compressed TIFF output with MPP-related metadata for downstream WSI tooling.
    - **Trade-off:** slightly more complex output handling, but better interoperability and support for very large masks.
 
