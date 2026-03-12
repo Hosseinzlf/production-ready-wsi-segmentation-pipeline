@@ -182,7 +182,7 @@ pytest tests/ -v
 pytest tests/ -v --cov=wsi_pipeline --cov-report=term-missing
 ```
 
-## Architectural Decisions (Brief)
+## Architectural Decisions
 
 This pipeline is designed for reliable segmentation on large WSIs while keeping memory usage predictable and runtime practical.
 The architecture separates concerns into focused modules:
@@ -192,23 +192,33 @@ The architecture separates concerns into focused modules:
 - `wsi_pipeline/writer.py`: disk-backed mask accumulation and final TIFF writing
 - `wsi_pipeline/pipeline.py`: orchestration, batching loop, and progress reporting
 
-Key design decisions and trade-offs:
+Key architectural decisions and trade-offs:
+
+This pipeline is designed around two top priorities: **memory safety** and **predictable runtime**, because WSIs are very large and expensive to process.
+
+The codebase is split by responsibility (`reader`, `model`, `writer`, `pipeline`) so each part stays testable, maintainable, and easier to evolve independently.
+
+Configuration is (`config/config.yaml`), with CLI overrides for run-specific changes. This keeps experiments reproducible while still flexible for one-off execution.
+
+Preflight checks and tests (including `tests/test_pipeline_preflight.py`) are intentional fail-fast safeguards to avoid wasted compute and partial invalid runs.
 
 1. **Disk-backed mask (`numpy.memmap`)**
-   - Keeps memory use stable for large slides.
+   - Uses a disk-backed array to keep memory usage stable on large slides.
+   - **Trade-off:** slower than in-memory accumulation, but much safer and more scalable for production-sized WSIs.
 
-
-2. **Closest-pyramid-level inference**
-   - Chooses the native slide level nearest `target_mpp` instead of resampling every patch.
-
+2. **Closest pyramid level for inference**
+   - Selects the native slide level nearest `target_mpp` instead of resampling every patch.
+   - **Trade-off:** improves throughput and reduces interpolation overhead, with minor precision compromise when an exact target resolution is unavailable.
 
 3. **Thumbnail-based tissue masking**
-   - Uses Otsu thresholding to skip mostly background patches and reduce compute time.
+   - Uses thumbnail + Otsu thresholding to skip mostly background patches.
+   - **Trade-off:** large compute savings, but thresholds must be tuned to avoid missing small tissue regions.
 
-
-4. **Patch overlap**
-   - Reduces artifacts at patch boundaries.
+4. **Patch overlap during tiling**
+   - Applies overlap between adjacent patches to reduce edge artifacts.
+   - **Trade-off:** better boundary quality at the cost of extra inference work.
 
 5. **Tiled BigTIFF output with resolution metadata**
-   - Supports large masks and downstream WSI tooling.
+   - Writes tiled, compressed TIFF output with MPP-related metadata for downstream WSI tooling.
+   - **Trade-off:** slightly more complex output handling, but better interoperability and support for very large masks.
 
