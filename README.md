@@ -198,9 +198,9 @@ This pipeline is designed around two top priorities: **memory safety** and **pre
 
 The codebase is split by responsibility (`reader`, `model`, `writer`, `pipeline`) so each part stays testable, maintainable, and easier to evolve independently.
 
-Configuration is (`config/config.yaml`), with CLI overrides for run-specific changes. This keeps experiments reproducible while still flexible for one-off execution.
+Configuration is (`config/config.yaml`), with CLI overrides for run-specific changes. This keeps experiments reproducible while still flexible for one execution.
 
-Preflight checks and tests (including `tests/test_pipeline_preflight.py`) are intentional fail-fast safeguards to avoid wasted compute and partial invalid runs.
+Preflight checks and tests (including `tests/test_pipeline_preflight.py`) are fail-fast safeguards to avoid wasted compute.
 
 1. **Disk-backed mask (`numpy.memmap`)**
    - Uses a disk-backed array to keep memory usage stable on large slides.
