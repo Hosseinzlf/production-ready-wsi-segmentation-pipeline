@@ -155,7 +155,7 @@ The output mask is a single-channel TIFF:
 - MPP encoded in TIFF resolution metadata
 - Pixel-aligned with the selected WSI pyramid level
 
-Generate preview image:
+Result example: include the initial image side by side with generated mask and overlay image.
 
 ```bash
 python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save mask_preview.png
@@ -197,21 +197,19 @@ Key design decisions and trade-offs:
 
 1. **Disk-backed mask (`numpy.memmap`)**
    - Keeps memory use stable for large slides.
-   - Trade-off: requires temporary disk space proportional to output mask size.
+
 
 2. **Closest-pyramid-level inference**
    - Chooses the native slide level nearest `target_mpp` instead of resampling every patch.
-   - Trade-off: actual MPP may be approximate if no level matches exactly.
+
 
 3. **Thumbnail-based tissue masking**
    - Uses Otsu thresholding to skip mostly background patches and reduce compute time.
-   - Trade-off: can be less reliable on unusual staining/artifacts, so it is configurable and can be disabled.
 
-4. **Patch overlap with center write-back**
+
+4. **Patch overlap**
    - Mitigates seam artifacts at patch boundaries.
-   - Trade-off: processes extra pixels compared with zero-overlap tiling.
 
 5. **Tiled BigTIFF output with resolution metadata**
    - Supports large masks and downstream WSI tooling.
-   - Trade-off: TIFF writing/compression adds output-stage time.
 
