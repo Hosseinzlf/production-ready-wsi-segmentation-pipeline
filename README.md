@@ -7,8 +7,8 @@ It uses patch-based inference with optional tissue filtering and exports tiled T
 
 - A CLI for local segmentation runs (`wsi-segment` or `python main.py`)
 - Config-driven behavior via `config/config.yaml`
-- Optional Prefect flow serving (`wsi-prefect`)
-- A visualization helper (`scripts/visualize_mask.py`) to inspect mask overlays
+- Optional client-server with Prefect flow serving (`wsi-prefect`)
+- A visualization helper (`scripts/visualize_mask.py`) to compare and show mask overlays
 
 ## Setup
 
@@ -60,8 +60,7 @@ uv sync
 Place your TorchScript model at the configured location:
 
 ```bash
-mkdir -p models
-cp /path/to/model.pt models/model.pt
+models/model.pt
 ```
 
 Default model path is configured in `config/config.yaml`.
@@ -80,9 +79,9 @@ docker run --rm \
 
 ## Input assumptions
 
-- WSI input: expects a whole-slide image file (for example `.svs`; other OpenSlide-supported formats may work).
+- WSI input: expects a whole-slide image file (for example `.svs`).
 - Model input: expects a TorchScript model file (`.pt`) at `models/model.pt` (or a path set in `config/config.yaml`).
-- The example path `data/slide.svs` is only a convention for this README; your WSI can be stored anywhere as long as you pass its actual path to the CLI/Prefect run.
+- The example path `data/slide.svs` is only a convention for this README, your WSI can be stored anywhere as long as you pass its actual path to the CLI/Prefect run.
 
 ## Usage
 
@@ -155,7 +154,7 @@ The output mask is a single-channel TIFF:
 - MPP encoded in TIFF resolution metadata
 - Pixel-aligned with the selected WSI pyramid level
 
-Result example: include the initial image side by side with generated mask and overlay image.
+Result example: include the initial WSI image, side by side with generated mask and overlay image.
 
 ```bash
 python scripts/visualize_mask.py data/slide.svs outputs/mask.tiff --save mask_preview.png
