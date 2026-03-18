@@ -6,8 +6,7 @@ Design decisions:
   This keeps RAM usage constant regardless of WSI size: only one batch of
   patches ever lives in memory at a time.
 - Writes the final result as a tiled, compressed GeoTIFF via tifffile.
-  Tiled TIFFs allow efficient random-access reads for downstream processing
-  (e.g., QuPath, ASAP, or other WSI viewers).
+  Tiled TIFFs allow efficient random-access reads for downstream processing.
 - bigtiff=True is set by default to support masks > 4 GB (large WSIs at 10x).
 - MPP is stored in the TIFF resolution tag so spatial coordinates are preserved.
 - Overlap cropping: when patches are extracted with overlap, only the centre
@@ -31,7 +30,6 @@ class MaskWriter:
     Usage:
         with MaskWriter(output_path, mask_shape, mpp) as writer:
             writer.write_patch(mask, x=100, y=200, crop=32)
-        # TIFF is written on __exit__
     """
 
     def __init__(
