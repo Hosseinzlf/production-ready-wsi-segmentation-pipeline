@@ -3,9 +3,7 @@ import argparse
 from pathlib import Path
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-import openslide
 import tifffile
 
 
@@ -31,6 +29,8 @@ def read_mask_preview(mask_path: Path, max_dim: int = 2048) -> np.ndarray:
 def read_input_preview(input_path: Path, max_dim: int = 2048) -> np.ndarray:
     # Try WSI formats first (svs, mrxs, ndpi, etc.)
     try:
+        import openslide
+
         with openslide.OpenSlide(str(input_path)) as slide:
             w, h = slide.dimensions
             scale = max(w, h) / float(max_dim)
@@ -55,11 +55,29 @@ def read_input_preview(input_path: Path, max_dim: int = 2048) -> np.ndarray:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Visualize input WSI and output mask together.")
+    parser = argparse.ArgumentParser(
+        description="Visualize input WSI and output mask, and optionally save separate preview files."
+    )
     parser.add_argument("input_file", type=Path, help="Path to input WSI/image (e.g., data/slide.svs)")
     parser.add_argument("mask_tiff", type=Path, help="Path to output mask TIFF (e.g., outputs/mask.tiff)")
     parser.add_argument("--max-dim", type=int, default=2048, help="Max preview dimension")
-    parser.add_argument("--save", type=Path, default=None, help="Optional output PNG path")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Optional directory to save separate PNG files (input, mask, overlay)",
+    )
+    parser.add_argument(
+        "--prefix",
+        type=str,
+        default="preview",
+        help="Filename prefix for saved files when --output-dir is provided",
+    )
+    parser.add_argument(
+        "--no-show",
+        action="store_true",
+        help="Do not display matplotlib preview window",
+    )
     args = parser.parse_args()
 
     if not args.input_file.exists():
@@ -76,6 +94,33 @@ def main():
     overlay = img.copy()
     overlay[mask_resized > 0] = (0.6 * overlay[mask_resized > 0] + 0.4 * np.array([255, 0, 0])).astype(np.uint8)
 
+    if args.output_dir:
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+
+        input_path = args.output_dir / f"{args.prefix}_input.png"
+        mask_path = args.output_dir / f"{args.prefix}_mask.png"
+        overlay_path = args.output_dir / f"{args.prefix}_overlay.png"
+
+        mask_image = (mask_resized > 0).astype(np.uint8) * 255
+
+        cv2.imwrite(str(input_path), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+        cv2.imwrite(str(mask_path), mask_image)
+        cv2.imwrite(str(overlay_path), cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR))
+
+        print(f"Saved input preview to: {input_path}")
+        print(f"Saved mask preview to: {mask_path}")
+        print(f"Saved overlay preview to: {overlay_path}")
+
+    if args.no_show:
+        return
+
+    try:
+        import matplotlib.pyplot as plt  # type: ignore[reportMissingImports]
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "matplotlib is required for interactive display. Install it or run with --no-show."
+        ) from exc
+
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 
     axes[0].imshow(img)
@@ -91,10 +136,6 @@ def main():
     axes[2].axis("off")
 
     plt.tight_layout()
-
-    if args.save:
-        fig.savefig(args.save, dpi=200, bbox_inches="tight")
-        print(f"Saved preview to: {args.save}")
 
     plt.show()
 
