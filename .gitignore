@@ -9,7 +9,7 @@ build/
 
 # Model weights
 *.pt
-
+ 
 # WSI data files (large — never commit)
 data/
 *.svs
