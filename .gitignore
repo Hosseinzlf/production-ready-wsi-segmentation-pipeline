@@ -6,7 +6,6 @@ build/
 .venv/
 .uv/
 *.tmp.mmap
-
 # Model weights
 *.pt
 
